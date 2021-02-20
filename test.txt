@@ -1,0 +1,2 @@
+./index.scala.html
+./terms.scala.html
