@@ -25,6 +25,8 @@ class FileUtil:
 
     @staticmethod
     def load_file_lines(file_name: str, clean_lf: bool = False) -> List[str]:
+        if not Path(file_name).is_file():
+            return []
         f = open(file_name, "r", encoding='utf-8')
         file_list = []
         read = True

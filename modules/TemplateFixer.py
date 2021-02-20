@@ -9,13 +9,52 @@ import re
 class TemplateFixer:
 
     @staticmethod
-    def do_main_messages(fd: FileData):
+    def fix(work, fd: FileData):
+        my = TemplateFixer
+
         for f in fd.sources:
+            did_work = False
             fn = f.replace("./", fd.root)
-            if TemplateFixer.do_main_messages_file(fn, fd.backup_root):
+            if work == "session_get_or_else":
+                did_work = my.do_session_get_or_else(fn, fd.backup_root)
+            if did_work:
                 fd.done.append(f)
             else:
                 fd.not_done.append(f)
+
+    @staticmethod
+    def do_session_get_or_else(file: str, backup_root: str):
+        out = []
+        lu = LineUtil
+        changed = False
+        lines = FileUtil.load_file_lines(file)
+        if len(lines) == 0:
+            # likely a top of dir
+            return
+
+        for line in lines:
+            if line.find("req.session().getOrElse") >= 0:
+                fcs = lu.extract_function_calls(line, "getOrElse")
+                if len(fcs) > 0:
+                    line2 = line
+                    for fc in fcs:
+                        p = lu.extract_function_params(fc)
+                        ps = p.split(",")
+                        ps0 = ps[0].strip()
+                        ps1 = ps[1].strip()
+                        nf = f'req.session().getOptional({ps0}).orElse({ps1})'
+                        of = f'req.session().{fc}'
+                        line2 = line2.replace(of, nf)
+                    out.append(line2)
+                    changed = True
+            else:
+                out.append(line)
+
+        if changed:
+            FileUtil.backup_file(file, backup_root)
+            FileUtil.write_lines(out, file)
+
+        return changed
 
     @staticmethod
     def do_main_messages_file(file: str, backup_root: str) -> bool:
