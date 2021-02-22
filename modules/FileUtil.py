@@ -14,6 +14,7 @@ class FileUtil:
     @staticmethod
     def load(root: str, file_names: List[str]) -> FileData:
         fd = FileData()
+        fd.root = root
         for f in file_names:
             f2 = f.replace("./", root + "/")
             p = Path(f2.replace("\n", ""))
@@ -62,7 +63,7 @@ class FileUtil:
         while Path(backup_name).exists():
             backup_name = f"{backup_root}/{name}.{rev_no}.{ext}"
             rev_no = rev_no + 1
-            if rev_no > 10:
+            if rev_no > 250:
                 raise Exception(f"Please cleanup backup files for {file_name}")
         backup_dir = Path(backup_name).parent
         if not Path.exists(backup_dir):
